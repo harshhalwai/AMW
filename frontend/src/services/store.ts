@@ -1,4 +1,5 @@
 import { apiRequest, getAccessToken, clearTokens, Session } from "../api/api";
+export type { Session } from "../api/api";
 
 export type Role = "owner" | "employee" | "customer";
 
@@ -117,6 +118,185 @@ export interface ShopProfile {
   gstin?: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  category: "Mobile" | "Accessory" | "Spare Part" | "Gadget";
+  brand: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  rating: number;
+  reviewsCount: number;
+  image: string;
+  badge?: string;
+  specs: string[];
+  inStock: boolean;
+  warranty: string;
+  sku?: string;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+const DEFAULT_PRODUCTS: Product[] = [
+  {
+    id: "PROD-101",
+    sku: "AMW-APL-15PM",
+    name: "iPhone 15 Pro Max 256GB",
+    category: "Mobile",
+    brand: "Apple",
+    price: 139900,
+    originalPrice: 159900,
+    stock: 5,
+    rating: 4.9,
+    reviewsCount: 42,
+    image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80",
+    badge: "Bestseller",
+    specs: ["256GB Storage", "Titanium Frame", "A17 Pro Chip", "48MP Main Camera"],
+    inStock: true,
+    warranty: "1 Year Official Apple Warranty",
+  },
+  {
+    id: "PROD-102",
+    sku: "AMW-SAM-S24U",
+    name: "Samsung Galaxy S24 Ultra 5G",
+    category: "Mobile",
+    brand: "Samsung",
+    price: 124999,
+    originalPrice: 134999,
+    stock: 7,
+    rating: 4.8,
+    reviewsCount: 38,
+    image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=600&q=80",
+    badge: "Galaxy AI",
+    specs: ["12GB RAM / 256GB", "Snapdragon 8 Gen 3", "200MP Quad Camera", "S-Pen Included"],
+    inStock: true,
+    warranty: "1 Year Samsung Warranty",
+  },
+  {
+    id: "PROD-103",
+    sku: "AMW-OP-12",
+    name: "OnePlus 12 5G 512GB",
+    category: "Mobile",
+    brand: "OnePlus",
+    price: 64999,
+    originalPrice: 69999,
+    stock: 8,
+    rating: 4.7,
+    reviewsCount: 29,
+    image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80",
+    badge: "Value Flagship",
+    specs: ["16GB RAM / 512GB", "Snapdragon 8 Gen 3", "100W SUPERVOOC", "Hasselblad Camera"],
+    inStock: true,
+    warranty: "1 Year Brand Warranty",
+  },
+  {
+    id: "PROD-201",
+    sku: "AMW-ACC-APL20W",
+    name: "Apple 20W USB-C Power Adapter",
+    category: "Accessory",
+    brand: "Apple",
+    price: 1899,
+    originalPrice: 1900,
+    stock: 24,
+    rating: 4.9,
+    reviewsCount: 110,
+    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80",
+    badge: "100% Genuine",
+    specs: ["20W Fast Charging", "USB-C Port", "BIS Certified", "Compact Design"],
+    inStock: true,
+    warranty: "6 Months Warranty",
+  },
+  {
+    id: "PROD-202",
+    sku: "AMW-ACC-SPG15P",
+    name: "Spigen Magnetic Armor Case iPhone 15 Pro",
+    category: "Accessory",
+    brand: "Spigen",
+    price: 1999,
+    originalPrice: 2499,
+    stock: 18,
+    rating: 4.8,
+    reviewsCount: 65,
+    image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?auto=format&fit=crop&w=600&q=80",
+    badge: "MagSafe Compatible",
+    specs: ["Air Cushion Tech", "Drop Protection 6ft", "Anti-Fingerprint Matte", "Precise Cutouts"],
+    inStock: true,
+    warranty: "6 Months Brand Warranty",
+  },
+  {
+    id: "PROD-301",
+    sku: "AMW-PART-IP13OLED",
+    name: "iPhone 13 / 14 Original OEM OLED Screen",
+    category: "Spare Part",
+    brand: "Apple",
+    price: 7499,
+    originalPrice: 9999,
+    stock: 9,
+    rating: 4.9,
+    reviewsCount: 54,
+    image: "https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&w=600&q=80",
+    badge: "OEM Grade A+",
+    specs: ["TrueTone Programmable", "Super Retina XDR OLED", "Scratch Resistant Glass", "Free Fitting Available"],
+    inStock: true,
+    warranty: "90 Days Replacement Warranty",
+  },
+  {
+    id: "PROD-302",
+    sku: "AMW-PART-BAT13",
+    name: "High-Capacity 3227mAh Battery iPhone 13",
+    category: "Spare Part",
+    brand: "Apple",
+    price: 2499,
+    originalPrice: 3200,
+    stock: 12,
+    rating: 4.8,
+    reviewsCount: 37,
+    image: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=600&q=80",
+    badge: "0-Cycle Fresh",
+    specs: ["Ti-Texas Instruments IC", "100% Battery Health Fix", "Zero Overheating", "90-Min Quick Swap"],
+    inStock: true,
+    warranty: "6 Months Replacement Warranty",
+  },
+  {
+    id: "PROD-401",
+    sku: "AMW-GDT-APP2",
+    name: "Apple AirPods Pro (2nd Gen, USB-C)",
+    category: "Gadget",
+    brand: "Apple",
+    price: 21990,
+    originalPrice: 24900,
+    stock: 6,
+    rating: 4.9,
+    reviewsCount: 88,
+    image: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&w=600&q=80",
+    badge: "Pro Audio",
+    specs: ["2x Active Noise Cancellation", "Adaptive Audio", "USB-C MagSafe Case", "30H Battery Life"],
+    inStock: true,
+    warranty: "1 Year Apple Warranty",
+  },
+  {
+    id: "PROD-402",
+    sku: "AMW-GDT-GW6",
+    name: "Samsung Galaxy Watch 6 Classic 43mm",
+    category: "Gadget",
+    brand: "Samsung",
+    price: 27999,
+    originalPrice: 36999,
+    stock: 4,
+    rating: 4.7,
+    reviewsCount: 22,
+    image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80",
+    badge: "Rotating Bezel",
+    specs: ["Sapphire Crystal Glass", "ECG & Blood Pressure", "Sleep Coach", "WearOS by Google"],
+    inStock: true,
+    warranty: "1 Year Samsung Warranty",
+  },
+];
+
 const K = {
   employees: "amw_employees",
   customers: "amw_customers",
@@ -125,6 +305,8 @@ const K = {
   messages: "amw_messages",
   shop: "amw_shop",
   session: "amw_session",
+  products: "amw_products",
+  cart: "amw_cart",
 };
 
 export const STORE_SYNCED_EVENT = "amw:store-synced";
@@ -406,7 +588,29 @@ export const Notifications = {
     await apiRequest("/api/notifications/clear-all/", { method: "POST" });
     await syncStoreFromServer();
   },
-  push: async (n: { type: string; title: string; message: string; jobSheetNo?: string }) => {}
+  push: async (n: {
+    type: NotificationType | string;
+    title: string;
+    message: string;
+    actorName?: string;
+    actorRole?: Role;
+    jobSheetNo?: string;
+  }) => {
+    const newItem: Notification = {
+      id: "notif-" + Date.now(),
+      type: (n.type as NotificationType) || "repair_status",
+      title: n.title,
+      message: n.message,
+      actorName: n.actorName,
+      actorRole: n.actorRole,
+      jobSheetNo: n.jobSheetNo,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    const list = [newItem, ...Notifications.all()];
+    writeLocal(K.notifications, list);
+    emitSync();
+  }
 };
 
 export const Messages = {
@@ -475,3 +679,107 @@ export const Sessions = {
     }
   }
 };
+
+// ---------- Products & Inventory Service ----------
+export const Products = {
+  all: (): Product[] => {
+    const list = readLocal<Product[]>(K.products, []);
+    if (!list || list.length === 0) {
+      writeLocal(K.products, DEFAULT_PRODUCTS);
+      return DEFAULT_PRODUCTS;
+    }
+    return list;
+  },
+  byId: (id: string) => Products.all().find(p => p.id === id),
+  byCategory: (cat: Product["category"]) => Products.all().filter(p => p.category === cat),
+  upsert: (product: Product) => {
+    const list = Products.all();
+    const idx = list.findIndex(p => p.id === product.id);
+    if (idx >= 0) {
+      list[idx] = product;
+    } else {
+      list.unshift(product);
+    }
+    writeLocal(K.products, list);
+    emitSync();
+  },
+  remove: (id: string) => {
+    const list = Products.all().filter(p => p.id !== id);
+    writeLocal(K.products, list);
+    emitSync();
+  },
+  updateStock: (id: string, newStock: number) => {
+    const list = Products.all();
+    const item = list.find(p => p.id === id);
+    if (item) {
+      item.stock = Math.max(0, newStock);
+      item.inStock = item.stock > 0;
+      writeLocal(K.products, list);
+      emitSync();
+    }
+  }
+};
+
+// ---------- Shopping Cart Service ----------
+export const CART_CHANGED_EVENT = "amw:cart-changed";
+
+export const Cart = {
+  items: (): CartItem[] => readLocal<CartItem[]>(K.cart, []),
+  add: (product: Product, quantity = 1) => {
+    const cart = Cart.items();
+    const existing = cart.find(i => i.product.id === product.id);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({ product, quantity });
+    }
+    writeLocal(K.cart, cart);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+  },
+  remove: (productId: string) => {
+    const cart = Cart.items().filter(i => i.product.id !== productId);
+    writeLocal(K.cart, cart);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+  },
+  updateQty: (productId: string, quantity: number) => {
+    let cart = Cart.items();
+    if (quantity <= 0) {
+      cart = cart.filter(i => i.product.id !== productId);
+    } else {
+      const item = cart.find(i => i.product.id === productId);
+      if (item) item.quantity = quantity;
+    }
+    writeLocal(K.cart, cart);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+  },
+  clear: () => {
+    writeLocal(K.cart, []);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+  },
+  total: () => Cart.items().reduce((acc, item) => acc + (item.product.price * item.quantity), 0),
+  count: () => Cart.items().reduce((acc, item) => acc + item.quantity, 0)
+};
+
+// ---------- Real Dashboard Backend API ----------
+export const DashboardAPI = {
+  fetchStats: async () => {
+    try {
+      if (getAccessToken()) {
+        const stats = await apiRequest("/api/dashboard/stats/");
+        return stats;
+      }
+    } catch (e) {
+      console.warn("Backend dashboard stats fetch failed, falling back to local store calculation", e);
+    }
+    return null;
+  }
+};
+

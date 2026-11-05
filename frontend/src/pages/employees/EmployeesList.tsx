@@ -1,11 +1,16 @@
-import { Employees, type Employee } from "../../services/store";
+import { Employees, Jobs, type Employee } from "../../services/store";
 import { useAuth } from "../../contexts/auth";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, UserPlus, ShieldAlert, Key, UserMinus } from "lucide-react";
+import { StatCard, EmptyState, StatusBadge } from "@/components/ui-bits";
+import {
+  Search, Plus, UserPlus, Users, Wrench, ShieldAlert, Key, UserMinus,
+  CheckCircle2, X, Phone, Mail, MapPin, IndianRupee, Pencil
+} from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "../../utils/utils";
 
 export function EmployeesList() {
   const { session } = useAuth();
@@ -21,11 +26,19 @@ export function EmployeesList() {
   const [tick, setTick] = useState(0);
 
   const list = Employees.all();
-  const visible = list.filter(e =>
-    e.name.toLowerCase().includes(q.toLowerCase()) ||
-    e.id.toLowerCase().includes(q.toLowerCase()) ||
-    e.role.toLowerCase().includes(q.toLowerCase()),
-  );
+  const allJobs = Jobs.all();
+
+  const visible = useMemo(() => {
+    return list.filter(
+      e =>
+        e.name.toLowerCase().includes(q.toLowerCase()) ||
+        e.id.toLowerCase().includes(q.toLowerCase()) ||
+        e.role.toLowerCase().includes(q.toLowerCase())
+    );
+  }, [list, q, tick]);
+
+  const totalPayroll = list.reduce((acc, e) => acc + (e.suspended ? 0 : e.salary), 0);
+  const activeCount = list.filter(e => !e.suspended).length;
 
   const startEdit = (e: Employee) => {
     setEditing(e);
@@ -39,7 +52,17 @@ export function EmployeesList() {
   };
 
   const startNew = () => {
-    setEditing({ pk: 0, id: "", name: "", address: "", mobile: "", email: "", joiningDate: "", salary: 0, role: "Technician" });
+    setEditing({
+      pk: 0,
+      id: "",
+      name: "",
+      address: "",
+      mobile: "",
+      email: "",
+      joiningDate: "",
+      salary: 0,
+      role: "Technician",
+    });
     setName("");
     setAddress("");
     setMobile("");
@@ -51,7 +74,9 @@ export function EmployeesList() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !mobile || !salary || !role) return toast.error("Please fill in all required fields");
+    if (!name || !mobile || !salary || !role) {
+      return toast.error("Please fill in all required fields (Name, Mobile, Role, Salary)");
+    }
 
     try {
       const isNew = !editing?.id;
@@ -69,7 +94,7 @@ export function EmployeesList() {
         password: password || undefined,
       });
 
-      toast.success(isNew ? `Employee account ${finalId} created!` : "Employee profile updated successfully!");
+      toast.success(isNew ? `Technician account ${finalId} created!` : "Staff profile updated successfully!");
       setEditing(null);
       setTick(t => t + 1);
     } catch (err: any) {
@@ -81,7 +106,7 @@ export function EmployeesList() {
     try {
       const nextState = !emp.suspended;
       await Employees.suspend(emp.pk, nextState);
-      toast.success(nextState ? `${emp.name} suspended successfully.` : `${emp.name} unsuspended successfully.`);
+      toast.success(nextState ? `${emp.name} suspended.` : `${emp.name} unsuspended.`);
       setTick(t => t + 1);
     } catch (err: any) {
       toast.error(err.message || "Failed to update suspension status");
@@ -89,7 +114,7 @@ export function EmployeesList() {
   };
 
   const handleDelete = async (emp: Employee) => {
-    if (!confirm(`Are you absolutely sure you want to delete employee account ${emp.id}?`)) return;
+    if (!confirm(`Are you absolutely sure you want to delete technician account ${emp.id}?`)) return;
     try {
       await Employees.remove(emp.pk);
       toast.success("Employee account removed");
@@ -101,109 +126,270 @@ export function EmployeesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Staff Management</h1>
-          <p className="text-sm text-muted-foreground">Manage system access roles, salaries, and details</p>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FF5733]/15 text-[#FF784E] border border-[#FF5733]/30">
+              Staff Directory
+            </span>
+            <span className="text-xs text-muted-foreground font-mono">
+              {list.length} technicians registered
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
+            Technician &amp; Staff Management
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Configure employee roles, manage credentials, benchmark repair performance, and track payroll.
+          </p>
         </div>
+
         {session?.role === "owner" && (
-          <Button onClick={startNew}><Plus className="size-4" /> Add Staff Member</Button>
+          <Button
+            onClick={startNew}
+            className="bg-[#FF5733] hover:bg-[#FF784E] text-white shadow-elegant rounded-xl text-xs font-bold px-4"
+          >
+            <Plus className="size-4 mr-1.5" /> Add Staff Member
+          </Button>
         )}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search by name, role, ID…" value={q} onChange={e => setQ(e.target.value)} />
+      {/* KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Active Technicians"
+          value={activeCount}
+          icon={<Users className="size-5" />}
+          accent="primary"
+          sub={`${list.length - activeCount} suspended`}
+        />
+        <StatCard
+          label="Monthly Staff Payroll"
+          value={`₹${totalPayroll.toLocaleString("en-IN")}`}
+          icon={<IndianRupee className="size-5" />}
+          accent="success"
+          sub="Active salaries total"
+        />
+        <StatCard
+          label="Total Serviced Devices"
+          value={allJobs.length}
+          icon={<Wrench className="size-5" />}
+          accent="primary"
+          sub="Store repair volume"
+        />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 rounded-2xl border border-border bg-card overflow-hidden shadow-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="text-left p-3">Employee ID</th>
-                  <th className="text-left p-3">Name</th>
-                  <th className="text-left p-3">Role</th>
-                  <th className="text-right p-3">Salary</th>
-                  <th className="text-left p-3">Status</th>
-                  {session?.role === "owner" && <th className="text-right p-3">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map(emp => (
-                  <tr key={emp.id} className="border-t border-border hover:bg-accent/30">
-                    <td className="p-3 font-mono text-xs">{emp.id}</td>
-                    <td className="p-3 font-semibold">{emp.name}</td>
-                    <td className="p-3 text-muted-foreground text-xs">{emp.role}</td>
-                    <td className="p-3 text-right">₹{emp.salary.toLocaleString("en-IN")}</td>
-                    <td className="p-3">
-                      {emp.suspended ? (
-                        <span className="px-2 py-0.5 bg-destructive/15 text-destructive rounded-full text-xs font-semibold">Suspended</span>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-success/15 text-success rounded-full text-xs font-semibold">Active</span>
-                      )}
-                    </td>
-                    {session?.role === "owner" && (
-                      <td className="p-3 text-right">
-                        <div className="flex justify-end gap-1.5">
-                          <Button variant="ghost" size="sm" onClick={() => startEdit(emp)}>Edit</Button>
-                          <Button variant="outline" size="sm" onClick={() => toggleSuspension(emp)} className={emp.suspended ? "text-success" : "text-warning"}>
-                            {emp.suspended ? "Activate" : "Suspend"}
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(emp)} className="text-destructive hover:bg-destructive/10"><UserMinus className="size-3.5" /></Button>
-                        </div>
-                      </td>
-                    )}
+      {/* Search Bar */}
+      <div className="relative bg-card p-3 rounded-2xl border border-border/80">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          className="pl-10 h-10 rounded-xl bg-secondary/50 border-border/60 text-white focus-visible:ring-[#FF5733] text-xs sm:text-sm"
+          placeholder="Search staff by name, technician role, ID (e.g. EMP001)..."
+          value={q}
+          onChange={e => setQ(e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Table View (8 or 12 cols) */}
+        <div className={editing ? "lg:col-span-8" : "lg:col-span-12"}>
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-card">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-secondary/60 border-b border-border/80 text-[11px] uppercase tracking-wider text-muted-foreground font-bold">
+                  <tr>
+                    <th className="p-3.5">ID</th>
+                    <th className="p-3.5">Technician</th>
+                    <th className="p-3.5">Role</th>
+                    <th className="p-3.5">Assigned Jobs</th>
+                    <th className="p-3.5">Salary</th>
+                    <th className="p-3.5">Status</th>
+                    {session?.role === "owner" && <th className="p-3.5 text-right">Actions</th>}
                   </tr>
-                ))}
-                {visible.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No employee records found.</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {visible.map(emp => {
+                    const assignedJobs = allJobs.filter(j => j.assignedEmployeeId === emp.id);
+                    const completedJobs = assignedJobs.filter(j => j.repairStatus === "Completed").length;
+
+                    return (
+                      <tr key={emp.id} className="hover:bg-secondary/30 transition-colors">
+                        <td className="p-3.5 font-mono text-xs text-[#FF784E] font-bold">{emp.id}</td>
+                        <td className="p-3.5 font-bold text-white text-sm">
+                          <div>{emp.name}</div>
+                          <div className="text-[11px] text-muted-foreground font-mono font-normal">{emp.mobile}</div>
+                        </td>
+                        <td className="p-3.5 text-muted-foreground font-medium">{emp.role}</td>
+                        <td className="p-3.5">
+                          <span className="font-mono text-white font-bold">{completedJobs}</span>
+                          <span className="text-muted-foreground text-[10px]"> / {assignedJobs.length} completed</span>
+                        </td>
+                        <td className="p-3.5 font-bold font-mono text-white">₹{emp.salary.toLocaleString("en-IN")}</td>
+                        <td className="p-3.5">
+                          {emp.suspended ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-500/15 text-red-400 border border-red-500/30">
+                              Suspended
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                              Active
+                            </span>
+                          )}
+                        </td>
+                        {session?.role === "owner" && (
+                          <td className="p-3.5 text-right">
+                            <div className="inline-flex items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => startEdit(emp)}
+                                className="h-8 rounded-lg border-border text-xs text-white hover:border-[#FF5733]"
+                              >
+                                <Pencil className="size-3 mr-1" /> Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleSuspension(emp)}
+                                className={cn(
+                                  "h-8 rounded-lg border-border text-xs",
+                                  emp.suspended ? "text-emerald-400 hover:border-emerald-500" : "text-amber-400 hover:border-amber-500"
+                                )}
+                              >
+                                {emp.suspended ? "Activate" : "Suspend"}
+                              </Button>
+                              <button
+                                onClick={() => handleDelete(emp)}
+                                className="p-1.5 rounded-lg border border-border hover:bg-red-500/20 hover:border-red-500 text-muted-foreground hover:text-red-400"
+                                title="Remove staff"
+                              >
+                                <UserMinus className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {visible.length === 0 && (
+            <EmptyState
+              title="No technician profiles found"
+              description="No staff members match your search query."
+              action={
+                <Button onClick={startNew} className="bg-[#FF5733] text-white">
+                  <Plus className="size-4 mr-1.5" /> Add Staff Member
+                </Button>
+              }
+            />
+          )}
         </div>
 
-        {/* Edit / Add employee Form */}
+        {/* Edit / Register Form Card */}
         {editing && (
-          <div className="p-5 rounded-2xl border border-border bg-card h-fit space-y-4 shadow-elegant animate-scale-in">
-            <div className="flex items-center gap-2 font-semibold text-primary">
-              <UserPlus className="size-4" />
-              {editing.id ? `Edit Profile` : "Register Employee"}
+          <div className="lg:col-span-4 rounded-2xl border border-border bg-card p-5 h-fit space-y-4 shadow-elegant animate-scale-in">
+            <div className="flex items-center justify-between border-b border-border/80 pb-3">
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                <UserPlus className="size-4 text-[#FF5733]" />
+                {editing.id ? `Edit Staff Profile` : "Register Technician"}
+              </h3>
+              <button onClick={() => setEditing(null)} className="p-1 text-muted-foreground hover:text-white">
+                <X className="size-4" />
+              </button>
             </div>
-            <form onSubmit={save} className="space-y-4">
+
+            <form onSubmit={save} className="space-y-3.5 text-xs">
               <div>
                 <Label>Full Name *</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} required />
+                <Input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Suresh Kumar"
+                  required
+                  className="mt-1 bg-secondary/50 border-border text-white"
+                />
               </div>
+
               <div>
-                <Label>Role *</Label>
-                <Input value={role} onChange={e => setRole(e.target.value)} placeholder="e.g. Technician, Senior Repairer" required />
+                <Label>Designation / Role *</Label>
+                <Input
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                  placeholder="Senior Motherboard Tech / Screen Specialist"
+                  required
+                  className="mt-1 bg-secondary/50 border-border text-white"
+                />
               </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <Label>Salary (₹) *</Label>
+                  <Input
+                    type="number"
+                    value={salary}
+                    onChange={e => setSalary(e.target.value)}
+                    placeholder="25000"
+                    required
+                    className="mt-1 font-mono bg-secondary/50 border-border text-white"
+                  />
+                </div>
+                <div>
+                  <Label>Mobile Number *</Label>
+                  <Input
+                    value={mobile}
+                    onChange={e => setMobile(e.target.value)}
+                    placeholder="9812345678"
+                    required
+                    className="mt-1 font-mono bg-secondary/50 border-border text-white"
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label>Monthly Salary (₹) *</Label>
-                <Input type="number" value={salary} onChange={e => setSalary(e.target.value)} required />
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="technician@email.com"
+                  className="mt-1 bg-secondary/50 border-border text-white"
+                />
               </div>
-              <div>
-                <Label>Mobile Number *</Label>
-                <Input value={mobile} onChange={e => setMobile(e.target.value)} required />
-              </div>
-              <div>
-                <Label>Email Address</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} />
-              </div>
+
               <div>
                 <Label>Residential Address</Label>
-                <Input value={address} onChange={e => setAddress(e.target.value)} />
+                <Input
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="Local city address..."
+                  className="mt-1 bg-secondary/50 border-border text-white"
+                />
               </div>
+
               <div>
-                <Label>{editing.id ? "New Password (Leave blank to keep current)" : "Password"}</Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required={!editing.id} />
+                <Label>{editing.id ? "New Password (Leave blank to keep current)" : "Login Password *"}</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required={!editing.id}
+                  placeholder={editing.id ? "••••••••" : "Temporary password"}
+                  className="mt-1 bg-secondary/50 border-border text-white"
+                />
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">Save</Button>
-                <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+
+              <div className="flex gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setEditing(null)} className="flex-1 rounded-xl">
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1 bg-[#FF5733] hover:bg-[#FF784E] text-white rounded-xl font-bold">
+                  Save Account
+                </Button>
               </div>
             </form>
           </div>

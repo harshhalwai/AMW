@@ -142,10 +142,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "authentication.User"
 
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # For easy development, restrict in production if needed.
-# CORS_ALLOWED_ORIGINS = [
-#     x.strip() for x in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",") if x.strip()
-# ]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    cors_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    if cors_env:
+        CORS_ALLOWED_ORIGINS = [x.strip() for x in cors_env.split(",") if x.strip()]
+    else:
+        CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

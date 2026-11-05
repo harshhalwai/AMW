@@ -5,7 +5,7 @@ import { apiRequest } from "../../api/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { ShieldCheck, ArrowLeft, KeyRound, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/AuthShell";
 
@@ -15,9 +15,11 @@ export function OwnerLogin() {
   const [id, setId] = useState("owner");
   const [password, setPassword] = useState("owner123");
   const [forgot, setForgot] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await apiRequest("/api/auth/login/", {
         method: "POST",
@@ -35,39 +37,93 @@ export function OwnerLogin() {
       };
 
       await signIn(sessionObj, res.tokens.access, res.tokens.refresh);
-      toast.success("Welcome back, Owner");
+      toast.success("Welcome back, Store Owner");
       navigate("/app/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <AuthShell title="Owner Login" subtitle="Full access to AMW Repair OS" icon={<ShieldCheck className="size-5" />}>
+    <AuthShell
+      title="Store Owner Login"
+      subtitle="Full administrative control over AMW Repair OS"
+      icon={<ShieldCheck className="size-5 text-[#FF5733]" />}
+    >
       {forgot ? (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Enter your registered mobile or email — we'll send a recovery link (demo only).</p>
-          <Input placeholder="Mobile or email" />
-          <Button className="w-full" onClick={() => { toast.success("Recovery link sent (demo)"); setForgot(false); }}>Send Link</Button>
-          <button onClick={() => setForgot(false)} className="text-sm text-primary hover:underline">Back to login</button>
+        <div className="space-y-4 text-xs">
+          <p className="text-muted-foreground leading-relaxed">
+            Enter your registered mobile or email to dispatch an instant recovery code.
+          </p>
+          <Input placeholder="Mobile or email address" className="bg-secondary/50 border-border text-white" />
+          <Button
+            className="w-full bg-[#FF5733] hover:bg-[#FF784E] text-white shadow-elegant rounded-xl font-bold"
+            onClick={() => {
+              toast.success("Recovery token dispatched (demo mode: owner / owner123)");
+              setForgot(false);
+            }}
+          >
+            Dispatch Recovery Link
+          </Button>
+          <button onClick={() => setForgot(false)} className="text-[#FF784E] hover:underline font-semibold block text-center w-full">
+            Return to Login
+          </button>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4 text-xs">
           <div>
-            <Label>Mobile / Email / Username</Label>
-            <Input value={id} onChange={e => setId(e.target.value)} placeholder="owner" />
+            <Label>Username / Registered Mobile</Label>
+            <Input
+              value={id}
+              onChange={e => setId(e.target.value)}
+              placeholder="owner"
+              className="mt-1 bg-secondary/50 border-border text-white rounded-xl"
+              required
+            />
           </div>
+
           <div>
-            <Label>Password</Label>
-            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+            <div className="flex items-center justify-between mb-1">
+              <Label>Account Password</Label>
+              <button
+                type="button"
+                onClick={() => setForgot(true)}
+                className="text-[11px] text-[#FF784E] hover:underline font-medium"
+              >
+                Forgot password?
+              </button>
+            </div>
+            <Input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="bg-secondary/50 border-border text-white rounded-xl"
+              required
+            />
           </div>
-          <button type="button" onClick={() => setForgot(true)} className="text-xs text-primary hover:underline">Forgot password?</button>
-          <Button type="submit" className="w-full">Sign in</Button>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#FF5733] hover:bg-[#FF784E] text-white shadow-elegant rounded-xl font-bold h-10 mt-2"
+          >
+            {loading ? "Authenticating..." : "Sign In to Admin Console"}
+          </Button>
         </form>
       )}
-      <div className="mt-6 flex justify-between text-xs">
-        <Link to="/" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3" /> All portals</Link>
-        <span className="text-muted-foreground">Demo: <span className="font-mono">owner / owner123</span></span>
+
+      <div className="mt-6 pt-4 border-t border-[#272B36] flex items-center justify-between text-[11px]">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-muted-foreground hover:text-white transition-colors"
+        >
+          <ArrowLeft className="size-3" /> Back to Store
+        </Link>
+        <span className="text-muted-foreground">
+          Demo: <span className="font-mono text-[#FF784E] font-bold">owner / owner123</span>
+        </span>
       </div>
     </AuthShell>
   );

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Section } from "@/components/ui-bits";
-import { Sparkles, Home, Phone, Mail, Award, Check } from "lucide-react";
+import { Sparkles, Home, Phone, Mail, Award, Check, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export function Settings() {
@@ -47,36 +47,86 @@ export function Settings() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">System Settings</h1>
-        <p className="text-sm text-muted-foreground font-medium">Configure global shop invoices and contact metadata</p>
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#FF5733]/15 text-[#FF784E] border border-[#FF5733]/30">
+            System Configuration
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
+          Store &amp; Invoicing Settings
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          Configure business profile metadata, tax IDs, invoice footers, and official customer contacts.
+        </p>
       </div>
 
-      <Section title="Shop Business Details">
-        <form onSubmit={save} className="space-y-4">
+      <Section title="AMW Enterprise Profile" subtitle="Tax invoice and print header information">
+        <form onSubmit={save} className="space-y-4 text-xs sm:text-sm">
           <div>
-            <Label>Shop Name *</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} disabled={!isOwner} required />
+            <Label>Shop Legal Business Name *</Label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              disabled={!isOwner}
+              required
+              className="mt-1 bg-secondary/50 border-border text-white"
+            />
           </div>
-          <div>
-            <Label>Contact Numbers *</Label>
-            <Input value={contact} onChange={e => setContact(e.target.value)} disabled={!isOwner} required />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Primary Contact Numbers *</Label>
+              <Input
+                value={contact}
+                onChange={e => setContact(e.target.value)}
+                disabled={!isOwner}
+                required
+                className="mt-1 bg-secondary/50 border-border text-white font-mono"
+              />
+            </div>
+            <div>
+              <Label>Official Support Email</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={!isOwner}
+                className="mt-1 bg-secondary/50 border-border text-white"
+              />
+            </div>
           </div>
-          <div>
-            <Label>Contact Email</Label>
-            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={!isOwner} />
-          </div>
+
           <div>
             <Label>Taxpayer Identification Number (GSTIN)</Label>
-            <Input value={gstin} onChange={e => setGstin(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" disabled={!isOwner} />
+            <Input
+              value={gstin}
+              onChange={e => setGstin(e.target.value)}
+              placeholder="e.g. 07AAAAA0000A1Z5"
+              disabled={!isOwner}
+              className="mt-1 bg-secondary/50 border-border text-white font-mono"
+            />
           </div>
+
           <div>
-            <Label>Shop Full Address</Label>
-            <Textarea value={address} onChange={e => setAddress(e.target.value)} disabled={!isOwner} rows={3} placeholder="Line 1, Line 2, State, ZIP..." />
+            <Label>Shop Full Physical Address</Label>
+            <Textarea
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              disabled={!isOwner}
+              rows={3}
+              placeholder="Shop No., Market / Arcade, Street, City, State, ZIP..."
+              className="mt-1 bg-secondary/50 border-border text-white"
+            />
           </div>
+
           {isOwner && (
-            <Button type="submit" className="w-full"><Check className="size-4" /> Save Business Profile</Button>
+            <div className="pt-2">
+              <Button type="submit" className="w-full bg-[#FF5733] hover:bg-[#FF784E] text-white shadow-elegant rounded-xl font-bold">
+                <Check className="size-4 mr-1.5" /> Save Business Configuration
+              </Button>
+            </div>
           )}
         </form>
       </Section>

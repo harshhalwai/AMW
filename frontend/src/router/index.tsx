@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { RootLayout } from "../layouts/RootLayout";
 import { AppLayout } from "../layouts/AppLayout";
 import { Landing } from "../pages/Landing";
@@ -15,6 +15,7 @@ import { Analytics } from "../pages/analytics/Analytics";
 import { Feedback } from "../pages/feedback/Feedback";
 import { Messages } from "../pages/messages/Messages";
 import { Settings } from "../pages/settings/Settings";
+import { ProductsList } from "../pages/products/Products";
 
 const router = createBrowserRouter([
   {
@@ -30,7 +31,10 @@ const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: "dashboard", element: <Dashboard /> },
+          { path: "products", element: <ProductsList /> },
           { path: "jobs", element: <JobsList /> },
+          { path: "repairs", element: <Navigate to="/app/jobs" replace /> },
+          { path: "orders", element: <Navigate to="/app/jobs" replace /> },
           { path: "jobs/new", element: <NewJob /> },
           { path: "jobs/:id", element: <JobDetails /> },
           { path: "customers", element: <CustomersList /> },
