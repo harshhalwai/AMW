@@ -175,3 +175,8 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 }
+
+# deployment
+CORS_ALLOWED_ORIGINS = [
+    "https://amw-git-main-tilakhalwai2006-5069s-projects.vercel.app/",
+]
