@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_BASE_URL || "https://amw-taao.onrender.com/";
+export const API_URL = import.meta.env.VITE_API_BASE_URL || "https://amw-taao.onrender.com";
 
 export interface Session {
   role: "owner" | "employee" | "customer";
